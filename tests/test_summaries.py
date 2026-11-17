@@ -76,3 +76,11 @@ def test_goodput_has_three_seeds(goodput):
     assert len(seeds) == 3 and len(set(seeds)) == 3
     for name, pol in goodput["policies"].items():
         assert len(pol["per_seed"]) == len(seeds), name
+
+
+def test_goodput_inside_own_ci(goodput):
+    """Each policy's goodput lies inside its own 95% CI."""
+    assert goodput["policies"]
+    for name, pol in goodput["policies"].items():
+        lo, hi = pol["ci"]
+        assert lo <= pol["goodput_rps"] <= hi, name
