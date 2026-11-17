@@ -1,11 +1,14 @@
 """Consistency checks for the committed result summaries and K tables."""
 
 import json
+from itertools import pairwise
 from pathlib import Path
 
 import pandas as pd
 import pytest
 import yaml
+
+from specdec5090.policy.tables import profile_rule_table
 
 ROOT = Path(__file__).resolve().parents[1]
 SUMMARY = ROOT / "results" / "summary"
@@ -84,3 +87,20 @@ def test_goodput_inside_own_ci(goodput):
     for name, pol in goodput["policies"].items():
         lo, hi = pol["ci"]
         assert lo <= pol["goodput_rps"] <= hi, name
+
+
+def _check_table(table, max_batch):
+    """Assert ranges start at 1, end at max_batch, are contiguous, and K never increases."""
+    assert table[0][0] == 1
+    assert table[-1][1] == max_batch
+    for start, end, _ in table:
+        assert start <= end
+    for (_, end, k), (start, _, k_next) in pairwise(table):
+        assert start == end + 1, "ranges are not contiguous"
+        assert k_next <= k, "K goes up as batch size grows"
+
+
+@pytest.mark.parametrize("max_batch", [64, 512])
+def test_profile_rule_table_is_well_formed(max_batch):
+    """profile_rule_table(3, 128) is a valid non-increasing K table."""
+    _check_table(profile_rule_table(3, 128, max_batch=max_batch), max_batch)
