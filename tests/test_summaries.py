@@ -68,3 +68,11 @@ def test_goodput_slo_matches_config(goodput):
     """The SLO in e7_goodput_main.json matches configs/slo.yaml."""
     cfg = yaml.safe_load((CONFIGS / "slo.yaml").read_text())
     assert goodput["slo"] == {"ttft_ms": cfg["ttft_ms"], "tpot_ms": cfg["tpot_ms"]}
+
+
+def test_goodput_has_three_seeds(goodput):
+    """There are 3 distinct seeds and one result per seed for every policy."""
+    seeds = goodput["seeds"]
+    assert len(seeds) == 3 and len(set(seeds)) == 3
+    for name, pol in goodput["policies"].items():
+        assert len(pol["per_seed"]) == len(seeds), name
