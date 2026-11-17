@@ -2,6 +2,9 @@
 
 from pathlib import Path
 
+import pandas as pd
+import pytest
+
 ROOT = Path(__file__).resolve().parents[1]
 SUMMARY = ROOT / "results" / "summary"
 
@@ -15,3 +18,15 @@ def test_grid_csvs_exist():
     names = [p.name for p in GRID_CSVS]
     assert any(n.startswith("e1_") for n in names)
     assert any(n.startswith("e2_") for n in names)
+
+
+@pytest.fixture(params=GRID_CSVS, ids=lambda p: p.name)
+def grid(request):
+    return pd.read_csv(request.param)
+
+
+def test_grid_has_required_columns(grid):
+    """Each E1/E2 summary has the required columns and is non-empty."""
+    missing = [c for c in REQUIRED_COLUMNS if c not in grid.columns]
+    assert not missing, f"missing columns: {missing}"
+    assert len(grid) > 0
