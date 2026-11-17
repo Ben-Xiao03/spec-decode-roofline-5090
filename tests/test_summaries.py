@@ -30,3 +30,8 @@ def test_grid_has_required_columns(grid):
     missing = [c for c in REQUIRED_COLUMNS if c not in grid.columns]
     assert not missing, f"missing columns: {missing}"
     assert len(grid) > 0
+
+
+def test_grid_has_at_least_three_reps(grid):
+    """Every grid point has at least 3 reps."""
+    assert (grid["reps"] >= 3).all(), grid.loc[grid["reps"] < 3, KEY + ["reps"]]
