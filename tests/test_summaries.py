@@ -35,3 +35,16 @@ def test_grid_has_required_columns(grid):
 def test_grid_has_at_least_three_reps(grid):
     """Every grid point has at least 3 reps."""
     assert (grid["reps"] >= 3).all(), grid.loc[grid["reps"] < 3, KEY + ["reps"]]
+
+
+@pytest.mark.parametrize("metric", ["mean_tpot_ms", "output_throughput"])
+def test_grid_mean_inside_ci(grid, metric):
+    """Where present, lo <= mean <= hi for mean TPOT and output throughput."""
+    lo, hi = f"{metric}_lo", f"{metric}_hi"
+    if metric not in grid.columns:
+        pytest.skip(f"{metric} not in this summary")
+    assert lo in grid.columns and hi in grid.columns
+    rows = grid.dropna(subset=[metric, lo, hi])
+    tol = 1e-9 * rows[metric].abs().clip(lower=1.0)
+    bad = rows[(rows[lo] > rows[metric] + tol) | (rows[metric] > rows[hi] + tol)]
+    assert bad.empty, bad[KEY + [lo, metric, hi]]
