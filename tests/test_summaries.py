@@ -8,7 +8,7 @@ import pandas as pd
 import pytest
 import yaml
 
-from specdec5090.policy.tables import profile_rule_table
+from specdec5090.policy.tables import lookup_table, profile_rule_table
 
 ROOT = Path(__file__).resolve().parents[1]
 SUMMARY = ROOT / "results" / "summary"
@@ -104,3 +104,10 @@ def _check_table(table, max_batch):
 def test_profile_rule_table_is_well_formed(max_batch):
     """profile_rule_table(3, 128) is a valid non-increasing K table."""
     _check_table(profile_rule_table(3, 128, max_batch=max_batch), max_batch)
+
+
+@pytest.mark.parametrize("max_batch", [64, 512])
+def test_lookup_table_is_well_formed(max_batch):
+    """lookup_table on a small best-K input is a valid non-increasing K table."""
+    best_k = {1: 3, 4: 3, 16: 2, 32: 1, 48: 1, 64: 0}
+    _check_table(lookup_table(best_k, max_batch=max_batch), max_batch)
