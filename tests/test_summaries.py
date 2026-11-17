@@ -1,12 +1,15 @@
 """Consistency checks for the committed result summaries and K tables."""
 
+import json
 from pathlib import Path
 
 import pandas as pd
 import pytest
+import yaml
 
 ROOT = Path(__file__).resolve().parents[1]
 SUMMARY = ROOT / "results" / "summary"
+CONFIGS = ROOT / "configs"
 
 GRID_CSVS = sorted(SUMMARY.glob("e1_*.csv")) + sorted(SUMMARY.glob("e2_*.csv"))
 KEY = ["setting", "context", "concurrency"]
@@ -54,3 +57,14 @@ def test_grid_has_no_duplicate_points(grid):
     """No (setting, context, concurrency) row appears twice."""
     dup = grid[grid.duplicated(KEY, keep=False)]
     assert dup.empty, dup[KEY]
+
+
+@pytest.fixture(scope="module")
+def goodput():
+    return json.loads((SUMMARY / "e7_goodput_main.json").read_text())
+
+
+def test_goodput_slo_matches_config(goodput):
+    """The SLO in e7_goodput_main.json matches configs/slo.yaml."""
+    cfg = yaml.safe_load((CONFIGS / "slo.yaml").read_text())
+    assert goodput["slo"] == {"ttft_ms": cfg["ttft_ms"], "tpot_ms": cfg["tpot_ms"]}
