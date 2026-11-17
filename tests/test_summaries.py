@@ -48,3 +48,9 @@ def test_grid_mean_inside_ci(grid, metric):
     tol = 1e-9 * rows[metric].abs().clip(lower=1.0)
     bad = rows[(rows[lo] > rows[metric] + tol) | (rows[metric] > rows[hi] + tol)]
     assert bad.empty, bad[KEY + [lo, metric, hi]]
+
+
+def test_grid_has_no_duplicate_points(grid):
+    """No (setting, context, concurrency) row appears twice."""
+    dup = grid[grid.duplicated(KEY, keep=False)]
+    assert dup.empty, dup[KEY]
