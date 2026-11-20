@@ -24,10 +24,8 @@ venv/
 secrets/
 
 # ---- Large or regenerable artifacts ----
-data/raw/*
-data/processed/*
+# data/raw, data/processed and results/raw are tracked; profiler traces are too large
 data/traces/*
-results/raw/*
 !**/.gitkeep
 *.nsys-rep
 *.ncu-rep

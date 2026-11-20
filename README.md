@@ -36,8 +36,8 @@ src/specdec5090/
   analysis/    statistics, goodput, figures
   tracking/    run metadata and Weights & Biases logging
   roofline.py  RTX 5090 / H100 roofline constants
-data/       datasets and profiler traces (not tracked)
-results/    raw/ (not tracked) and summary/ (tracked, small CSV/JSON)
+data/       Spec-Bench questions and the fixed calibration/test split (traces/ not tracked)
+results/    raw/ (per-run outputs of E2 and E7) and summary/ (small CSV/JSON used by the figures)
 figures/    generated figures
 tests/      unit tests
 demo/       side-by-side trace replay demo
@@ -106,6 +106,11 @@ python -m specdec5090.workloads.specbench --question-file data/raw/specbench/que
 | E7 open-loop goodput | `python scripts/run_goodput.py --policies nosd,k3,doc_table,... --seeds 101,102,103 --rate-lo 1 --rate-hi 14`, then `python scripts/summarize_goodput.py results/raw/e7/<run> --out ...` | `e7_goodput_*.json` |
 | E8 greedy output equivalence | `python scripts/check_correctness.py --settings k3,doc_table --n 200` | `e8_correctness_*.json` |
 | E9 GSM8K / HumanEval | `HF_ALLOW_CODE_EVAL=1 python scripts/run_quality.py --policy k3` | `e9_quality_*.json` |
+
+`data/raw/specbench/question.jsonl` is Spec-Bench (Apache-2.0) at the commit above. Raw outputs are committed
+for the E2 grid (`results/raw/e2/<run>/rows.jsonl`, one line per setting, context, concurrency and repetition) and
+for E7 (`results/raw/e7/<run>/`: the arrival trace per seed and per-request TTFT/TPOT for each policy). The other
+experiments are committed as summaries only.
 
 Grid rows are summarized with `python scripts/summarize_grid.py <rows.jsonl> ... --out <csv>`. All figures are
 rebuilt from the committed summaries with `uv run scripts/make_figures.py` (no GPU needed).
