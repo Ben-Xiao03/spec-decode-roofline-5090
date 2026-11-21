@@ -48,7 +48,7 @@ def main() -> None:
     slo = yaml.safe_load(open(REPO / "configs" / "slo.yaml"))
 
     data: dict[str, dict[int, list[dict]]] = {}
-    for f in glob.glob(str(args.run_dir / "*_seed*.json")):
+    for f in sorted(glob.glob(str(args.run_dir / "*_seed*.json"))):  # glob order is filesystem dependent
         m = re.match(r"(.+)_seed(\d+)\.json", Path(f).name)
         if not m or m.group(1) == "trace":
             continue
@@ -65,7 +65,6 @@ def main() -> None:
                               "slo_attainment": float(np.mean([met(r, slo) for s in seeds for r in data[p][s]])),
                               "tpot_p50_ms": float(np.percentile(tp, 50)), "tpot_p99_ms": float(np.percentile(tp, 99))}
 
-    rng = np.random.default_rng(0)
     for a in data:
         for b in data:
             if a == b or a != args.ref and b != "nosd":
@@ -76,6 +75,8 @@ def main() -> None:
                           for ra, rb in zip(sorted(data[a][s], key=lambda r: (r["arrival_s"], r["question_id"])),
                                             sorted(data[b][s], key=lambda r: (r["arrival_s"], r["question_id"])))])
             scale = len(d) / (len(seeds) * args.duration)  # converts mean per-request difference to req/s
+            # a fresh generator per pair, so each CI is independent of the order in which pairs are visited
+            rng = np.random.default_rng(0)
             boots = d[rng.integers(0, d.size, size=(10000, d.size))].mean(axis=1) * scale
             res["diffs"][f"{a} - {b}"] = {"diff_rps": m, "seed_t_ci": [lo, hi],
                                           "request_bootstrap_ci": [float(np.percentile(boots, 2.5)),
